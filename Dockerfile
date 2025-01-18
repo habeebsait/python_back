@@ -11,9 +11,11 @@ RUN apt-get update && apt-get install -y \
     curl \
     gnupg \
     gcc \
-    libportaudio2 \  # Required for PyAudio (optional)
-    portaudio19-dev \  # Required for PyAudio (optional)
-    && curl -sS -o - https://dl-ssl.google.com/linux/linux_signing_key.pub | apt-key add - \
+    libportaudio2 \
+    portaudio19-dev
+
+# Add Google Chrome repository and install Chrome
+RUN curl -sS -o - https://dl-ssl.google.com/linux/linux_signing_key.pub | apt-key add - \
     && echo "deb [arch=amd64] http://dl.google.com/linux/chrome/deb/ stable main" >> /etc/apt/sources.list.d/google-chrome.list \
     && apt-get -y update \
     && apt-get -y install google-chrome-stable
