@@ -18,7 +18,7 @@ httpx==0.28.1
 # Data processing and utilities
 beautifulsoup4==4.12.3
 lxml==5.3.0
-numpy==2.2.1
+numpy==1.26.4  # Downgraded for Python 3.9 compatibility
 pydub==0.25.1
 pydantic==2.9.2
 pydantic_core==2.23.4
