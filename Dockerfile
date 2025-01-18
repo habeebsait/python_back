@@ -12,24 +12,25 @@ RUN apt-get update && apt-get install -y \
     gnupg \
     gcc \
     libportaudio2 \
-    portaudio19-dev
+    portaudio19-dev \
+    ca-certificates \
+    && rm -rf /var/lib/apt/lists/*  # Clean up apt cache to reduce image size
 
 # Add Google Chrome repository and install Chrome
-RUN curl -sS -o - https://dl-ssl.google.com/linux/linux_signing_key.pub | apt-key add - \
+RUN wget -q -O - https://dl-ssl.google.com/linux/linux_signing_key.pub | apt-key add - \
     && echo "deb [arch=amd64] http://dl.google.com/linux/chrome/deb/ stable main" >> /etc/apt/sources.list.d/google-chrome.list \
-    && apt-get -y update \
-    && apt-get -y install google-chrome-stable
+    && apt-get update \
+    && apt-get install -y google-chrome-stable \
+    && rm -rf /var/lib/apt/lists/*  # Clean up apt cache
 
-# Verify Chrome installation
-RUN google-chrome --version
-
-# Install the matching ChromeDriver version
-RUN CHROME_VERSION=$(google-chrome --version | awk '{print $3}' | cut -d'.' -f1) \
-    && CHROME_DRIVER_VERSION=$(curl -sS https://chromedriver.storage.googleapis.com/LATEST_RELEASE_${CHROME_VERSION}) \
-    && wget -O /tmp/chromedriver.zip https://chromedriver.storage.googleapis.com/$CHROME_DRIVER_VERSION/chromedriver_linux64.zip \
-    && unzip /tmp/chromedriver.zip -d /usr/bin/ \
-    && rm /tmp/chromedriver.zip \
-    && chmod +x /usr/bin/chromedriver
+# Install ChromeDriver
+RUN CHROME_VERSION=$(google-chrome --version | sed -E "s/.* ([0-9]+)(\.[0-9]+){3}.*/\1/") \
+    && wget -q "https://edgedl.me.gvt1.com/edgedl/chrome/chrome-for-testing/${CHROME_VERSION}/linux64/chromedriver-linux64.zip" -O /tmp/chromedriver.zip \
+    && unzip -q /tmp/chromedriver.zip -d /tmp/ \
+    && mv /tmp/chromedriver-linux64/chromedriver /usr/local/bin/chromedriver \
+    && chmod +x /usr/local/bin/chromedriver \
+    && rm -rf /tmp/chromedriver* \
+    && chromedriver --version
 
 # Copy the requirements file and install Python dependencies
 COPY requirements.txt .
@@ -38,8 +39,8 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Copy the rest of the application code
 COPY . .
 
-# Expose the port your app runs on
-EXPOSE 5000
+# Make port 8000 available to the world outside this container
+EXPOSE 8000
 
-# Run the app
-CMD ["gunicorn", "app:app"]
+# Run the app using gunicorn
+CMD gunicorn app:app --bind 0.0.0.0:8000 --workers 2 --threads 4 --timeout 120
