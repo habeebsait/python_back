@@ -20,11 +20,11 @@ RUN curl -sS -o - https://dl-ssl.google.com/linux/linux_signing_key.pub | apt-ke
     && apt-get -y update \
     && apt-get -y install google-chrome-stable
 
-# Get the installed Chrome version
+# Verify Chrome installation
 RUN google-chrome --version
 
 # Install the matching ChromeDriver version
-RUN CHROME_VERSION=$(google-chrome --version | awk '{print $3}') \
+RUN CHROME_VERSION=$(google-chrome --version | awk '{print $3}' | cut -d'.' -f1) \
     && CHROME_DRIVER_VERSION=$(curl -sS https://chromedriver.storage.googleapis.com/LATEST_RELEASE_${CHROME_VERSION}) \
     && wget -O /tmp/chromedriver.zip https://chromedriver.storage.googleapis.com/$CHROME_DRIVER_VERSION/chromedriver_linux64.zip \
     && unzip /tmp/chromedriver.zip -d /usr/bin/ \
